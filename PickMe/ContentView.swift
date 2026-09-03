@@ -9,15 +9,27 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            VStack(spacing: 20) {
+                Text("PickMe")
+                    .font(.system(size: 50))
+                    .foregroundColor(.purple)
+                
+                
+                NavigationLink("Finger Picker") {
+                    FingerPickerView()
+                }
+                
+                Button("Team Picker") {
+                }
+                
+                Button("Settings") {
+                }
+            }
         }
-        .padding()
     }
 }
+    
 
 #Preview {
     ContentView()
