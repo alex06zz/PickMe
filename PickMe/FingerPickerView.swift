@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+import UIKit
 
 // MARK: - Finger Picker Screen
 
@@ -15,6 +15,9 @@ struct FingerPickerView: View {
     @State private var fingers: [FingerTouch] = []
     @State private var selectedFingerID: UUID?
     @State private var selectionTask: Task<Void, Never>?
+    @State private var countdownNumber: Int?
+    @State private var countdownScale: CGFloat = 1.0
+    @State private var winnerScale: CGFloat = 1.0
     
     private let fingerColors: [Color] = [
         .pink,
@@ -57,10 +60,23 @@ struct FingerPickerView: View {
                             ]
                         )
                         .frame(width: 100, height: 100)
+                        .scaleEffect(
+                            selectedFingerID == finger.id ? winnerScale : 1.0
+                        )
                         .position(finger.position)
                     // Allows touches to pass through the circles
                         .allowsHitTesting(false)
                 }
+            }
+            
+            // Display countdown in the centre of the screen
+            
+            if let countdownNumber {
+                Text("\(countdownNumber)")
+                    .font(.system(size: 100, weight: .bold))
+                    .foregroundColor(.white)
+                    .scaleEffect(countdownScale)
+                    .allowsHitTesting(false)
             }
         }
         .onChange(of: fingers.map { $0.id }) { oldIDs, newIDs in
@@ -68,7 +84,9 @@ struct FingerPickerView: View {
             if newIDs.isEmpty {
                 selectionTask?.cancel()
                 selectionTask = nil
+                countdownNumber = nil
                 selectedFingerID = nil
+                winnerScale = 1.0
                 return
             }
             
@@ -77,7 +95,7 @@ struct FingerPickerView: View {
             }
             
             selectionTask?.cancel()
-            
+            countdownNumber = nil
             
             if newIDs.count >= 2 {
                 selectionTask = Task {
@@ -92,21 +110,69 @@ struct FingerPickerView: View {
         let startingFingerIDs = Set(fingers.map { $0.id })
         
         do {
-            try await Task.sleep(for: .seconds(2))
+            try await Task.sleep(for: .seconds(1))
+            
+            // start countdown
+            countdownNumber = 3
+            animateCountdownNumber()
+            playLightHaptic()
+            
+            try await Task.sleep(for: .seconds(1))
+            countdownNumber = 2
+            animateCountdownNumber()
+            playLightHaptic()
+            
+            try await Task.sleep(for: .seconds(1))
+            countdownNumber = 1
+            animateCountdownNumber()
+            playLightHaptic()
+            
+            try await Task.sleep(for: .seconds(1))
+            
         } catch {
+            //The finger group changed so the task cancelled
+            countdownNumber = nil
             return
         }
-            
+        
         let currentFingerIDs = Set(fingers.map { $0.id })
-            
+        
         guard currentFingerIDs == startingFingerIDs,
               fingers.count >= 2,
               selectedFingerID == nil,
               let winner = fingers.randomElement()
         else {
+            countdownNumber = nil
             return
         }
+        countdownNumber = nil
         selectedFingerID = winner.id
+        
+        winnerScale = 1.0
+        
+        withAnimation(.spring(duration: 0.5, bounce: 0.5)) {
+            winnerScale = 1.5
+        }
+        
+        playWinnerHaptic()
+    }
+    
+    private func animateCountdownNumber() {
+        countdownScale = 1.5
+        
+        withAnimation(.easeOut(duration: 0.3)) {
+            countdownScale = 1.0
+        }
+    }
+    
+    private func playLightHaptic() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+    }
+    
+    private func playWinnerHaptic() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
     }
 }
 
