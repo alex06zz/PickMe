@@ -13,7 +13,7 @@ import UIKit
 struct FingerPickerView: View {
     // Stores all fingers on screen
     @State private var fingers: [FingerTouch] = []
-    @State private var selectedFingerID: UUID?
+    @State private var selectedFingerIDs: Set<UUID> = []
     @State private var selectionTask: Task<Void, Never>?
     @State private var countdownNumber: Int?
     @State private var countdownScale: CGFloat = 1.0
@@ -51,7 +51,7 @@ struct FingerPickerView: View {
             
             // Draw 1 coloured circle for every finger
             ForEach(fingers) { finger in
-                if selectedFingerID == nil || selectedFingerID == finger.id {
+                if selectedFingerIDs.isEmpty || selectedFingerIDs.contains(finger.id) {
                     Circle()
                         .fill(
                             fingerColors[
@@ -61,7 +61,7 @@ struct FingerPickerView: View {
                         )
                         .frame(width: 100, height: 100)
                         .scaleEffect(
-                            selectedFingerID == finger.id ? winnerScale : 1.0
+                            selectedFingerIDs.contains(finger.id) ? winnerScale : 1.0
                         )
                         .position(finger.position)
                     // Allows touches to pass through the circles
@@ -85,12 +85,12 @@ struct FingerPickerView: View {
                 selectionTask?.cancel()
                 selectionTask = nil
                 countdownNumber = nil
-                selectedFingerID = nil
+                selectedFingerIDs.removeAll()
                 winnerScale = 1.0
                 return
             }
             
-            if selectedFingerID != nil {
+            if !selectedFingerIDs.isEmpty {
                 return
             }
             
@@ -139,14 +139,14 @@ struct FingerPickerView: View {
         
         guard currentFingerIDs == startingFingerIDs,
               fingers.count >= 2,
-              selectedFingerID == nil,
+              selectedFingerIDs.isEmpty,
               let winner = fingers.randomElement()
         else {
             countdownNumber = nil
             return
         }
         countdownNumber = nil
-        selectedFingerID = winner.id
+        selectedFingerIDs.insert(winner.id)
         
         winnerScale = 1.0
         
