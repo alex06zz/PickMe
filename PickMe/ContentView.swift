@@ -20,7 +20,8 @@ struct ContentView: View {
                     FingerPickerView()
                 }
                 
-                Button("Team Picker") {
+                NavigationLink("Team Picker") {
+                    TeamPickerView()
                 }
                 
                 Button("Settings") {
