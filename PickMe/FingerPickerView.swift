@@ -11,11 +11,20 @@ import UIKit
 // MARK: - Finger Picker Screen
 
 struct FingerPickerView: View {
+    
     // Stores all fingers on screen
     @State private var fingers: [FingerTouch] = []
+    
+    // Stores the selectd winner IDs
     @State private var selectedFingerIDs: Set<UUID> = []
+    
+    // Allows the countdown task to be cancelled if needed
     @State private var selectionTask: Task<Void, Never>?
+    @State private var numberOfWinners = 1
+    @State private var showingSettings = false
     @State private var countdownNumber: Int?
+    
+    // Used for animation
     @State private var countdownScale: CGFloat = 1.0
     @State private var winnerScale: CGFloat = 1.0
     
@@ -41,9 +50,14 @@ struct FingerPickerView: View {
             // UIKit view responsible for detecting multiple touches
             MultiTouchView(fingers: $fingers)
             
-            // Instructions when no fingers on screen
+            // Instructions when not enough fingers on screen
             if fingers.isEmpty {
                 Text("Place your fingers on the screen")
+                    .foregroundColor(.white)
+                    .font(.title2)
+                    .allowsHitTesting(false)
+            } else if fingers.count < numberOfWinners {
+                Text("Place at least \(numberOfWinners) fingers")
                     .foregroundColor(.white)
                     .font(.title2)
                     .allowsHitTesting(false)
@@ -70,7 +84,6 @@ struct FingerPickerView: View {
             }
             
             // Display countdown in the centre of the screen
-            
             if let countdownNumber {
                 Text("\(countdownNumber)")
                     .font(.system(size: 100, weight: .bold))
@@ -78,9 +91,30 @@ struct FingerPickerView: View {
                     .scaleEffect(countdownScale)
                     .allowsHitTesting(false)
             }
+            
+            // Settings button in the top-right corner
+            VStack {
+                HStack {
+                    Spacer()
+                    
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .padding()
+                    }
+                }
+                
+                Spacer()
+            }
         }
+        
+        // Runs when fingers are added or removed
         .onChange(of: fingers.map { $0.id }) { oldIDs, newIDs in
             
+            // Reset when everyone lifts fingers
             if newIDs.isEmpty {
                 selectionTask?.cancel()
                 selectionTask = nil
@@ -90,26 +124,37 @@ struct FingerPickerView: View {
                 return
             }
             
+            // Stop another selection after winners are chosen
             if !selectedFingerIDs.isEmpty {
                 return
             }
             
+            // Restart the countdown if the group of fingers changes
             selectionTask?.cancel()
             countdownNumber = nil
             
-            if newIDs.count >= 2 {
+            // Start when enough fingers are on screen
+            if newIDs.count >= max(2, numberOfWinners) {
                 selectionTask = Task {
                     await chooseRandomFinger()
                     
                 }
             }
         }
+        // Opens finger picker settings
+        .sheet(isPresented: $showingSettings) {
+            FingerPickerSettingsView(
+                numberOfWinners: $numberOfWinners
+                )
+        }
     }
     
+    // MARK: - Finger Selection
+    
     private func chooseRandomFinger() async {
-        let startingFingerIDs = Set(fingers.map { $0.id })
         
         do {
+            // Give time to place fingers
             try await Task.sleep(for: .seconds(1))
             
             // start countdown
@@ -135,18 +180,23 @@ struct FingerPickerView: View {
             return
         }
         
-        let currentFingerIDs = Set(fingers.map { $0.id })
-        
-        guard currentFingerIDs == startingFingerIDs,
-              fingers.count >= 2,
-              selectedFingerIDs.isEmpty,
-              let winner = fingers.randomElement()
+        // Make sure same group of fingers is still on screen
+        guard fingers.count >= numberOfWinners,
+              selectedFingerIDs.isEmpty
         else {
             countdownNumber = nil
             return
         }
+        
+        // randomly shuffle the fingers and take required number of winners
+        let winners = fingers.shuffled().prefix(numberOfWinners)
+        
         countdownNumber = nil
-        selectedFingerIDs.insert(winner.id)
+        
+        // Store each selected winner
+        for winner in winners {
+            selectedFingerIDs.insert(winner.id)
+        }
         
         winnerScale = 1.0
         
@@ -157,6 +207,8 @@ struct FingerPickerView: View {
         playWinnerHaptic()
     }
     
+    // MARK: - Animation
+    
     private func animateCountdownNumber() {
         countdownScale = 1.5
         
@@ -164,6 +216,8 @@ struct FingerPickerView: View {
             countdownScale = 1.0
         }
     }
+    
+    // MARK: - Haptics
     
     private func playLightHaptic() {
         let generator = UIImpactFeedbackGenerator(style: .light)
