@@ -32,9 +32,9 @@ For team selection, the active fingers are randomly shuffled and distrubuted bet
 
 ## Screenshots
 <p align="center">
-  <img src="Screenshots/home.png" width="30%" />
-  <img src="Screenshots/finger-picker.png" width="30%" />
-  <img src="Screenshots/team-picker.png" width="30%" />
+  <img src="Screenshots/home.PNG" width="30%" />
+  <img src="Screenshots/finger-picker.PNG" width="30%" />
+  <img src="Screenshots/team-picker.PNG" width="30%" />
 </p>
 
 ## What I Learned
