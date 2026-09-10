@@ -53,13 +53,13 @@ struct FingerPickerView: View {
             // Instructions when not enough fingers on screen
             if fingers.isEmpty {
                 Text("Place your fingers on the screen")
-                    .foregroundColor(.white)
-                    .font(.title2)
+                    .font(.system(size: 22, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.75))
                     .allowsHitTesting(false)
             } else if fingers.count < numberOfWinners {
                 Text("Place at least \(numberOfWinners) fingers")
-                    .foregroundColor(.white)
-                    .font(.title2)
+                    .font(.system(size: 22, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.75))
                     .allowsHitTesting(false)
             }
             
@@ -101,8 +101,11 @@ struct FingerPickerView: View {
                         showingSettings = true
                     } label: {
                         Image(systemName: "gearshape.fill")
-                            .font(.title2)
-                            .foregroundColor(.white)
+                            .font(.system(size: 20))
+                            .foregroundColor(.white.opacity(0.85))
+                            .frame(width: 48, height: 48)
+                            .background(.white.opacity(0.12))
+                            .clipShape(Circle())
                             .padding()
                     }
                 }
@@ -180,7 +183,7 @@ struct FingerPickerView: View {
             return
         }
         
-        // Make sure same group of fingers is still on screen
+        // Make sure there are enough fingers
         guard fingers.count >= numberOfWinners,
               selectedFingerIDs.isEmpty
         else {

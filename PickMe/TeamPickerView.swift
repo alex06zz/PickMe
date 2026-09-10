@@ -62,18 +62,17 @@ struct TeamPickerView: View {
             
             // Detect multiple finger touches
             MultiTouchView(fingers: $fingers)
-            MultiTouchView(fingers: $fingers)
             
             if fingers.isEmpty {
                 Text("Place your fingers on the screen")
-                    .foregroundColor(.white)
-                    .font(.title2)
+                    .font(.system(size: 22, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.75))
                     .allowsHitTesting(false)
                     
             } else if fingers.count < numberOfTeams {
                 Text("Place at least \(numberOfTeams) fingers")
-                    .foregroundColor(.white)
-                    .font(.title2)
+                    .font(.system(size: 22, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.75))
                     .allowsHitTesting(false)
             }
             
@@ -111,8 +110,11 @@ struct TeamPickerView: View {
                         showingSettings = true
                     } label: {
                         Image(systemName: "gearshape.fill")
-                            .font(.title2)
-                            .foregroundColor(.white)
+                            .font(.system(size:20))
+                            .foregroundColor(.white.opacity(0.85))
+                            .frame(width: 48, height: 48)
+                            .background(.white.opacity(0.12))
+                            .clipShape(Circle())
                             .padding()
                     }
                 }
@@ -226,8 +228,6 @@ struct TeamPickerView: View {
         generator.notificationOccurred(.success)
     }
 }
-
-
 
 #Preview {
     TeamPickerView()
